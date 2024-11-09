@@ -1,6 +1,7 @@
 <?php
 
-import('pages.article.ArticleHandler');
+use APP\pages\article\ArticleHandler;
+use APP\facades\Repo;
 
 class FullTextArticleHandler extends ArticleHandler {
 
@@ -34,7 +35,7 @@ class FullTextArticleHandler extends ArticleHandler {
 		if (empty($fullTextFileIds)) $dispatcher->handle404();
 
 		// Find if the file is an image dependent from the XML file, from which full-text was generated.
-		import('lib.pkp.classes.submission.SubmissionFile'); // const
+/*		import('lib.pkp.classes.submission.SubmissionFile'); // const
 		$dependentFilesIterator = Services::get('submissionFile')->getMany([
 			'assocTypes' => [ASSOC_TYPE_SUBMISSION_FILE],
 			'assocIds' => array_values($fullTextFileIds),
@@ -43,7 +44,22 @@ class FullTextArticleHandler extends ArticleHandler {
 			'includeDependentFiles' => true,
 		]);
 
-		if (is_null($dependentFilesIterator->current())) $dispatcher->handle404();
+		if (is_null($dependentFilesIterator->current())) $dispatcher->handle404();*/
+		
+		
+		$dependentFilesIterator = Repo::submissionFile()
+			->getCollector()
+			->filterByAssoc(
+				Application::ASSOC_TYPE_SUBMISSION_FILE,
+				array_values($fullTextFileIds)
+			)
+            ->filterBySubmissionIds([$this->article->getId()])
+			->filterByFileStages([SubmissionFile::SUBMISSION_FILE_DEPENDENT])
+			->includeDependentFiles()
+			->getMany();
+
+		if (is_null($dependentFilesIterator->first())) $dispatcher->handler404();
+
 
 		$submissionFile = null;
 		foreach ($dependentFilesIterator as $dependentFile) {
@@ -55,7 +71,7 @@ class FullTextArticleHandler extends ArticleHandler {
 
 		if (!$submissionFile) $dispatcher->handle404();
 
-		if (!in_array($submissionFile->getData('mimetype'), $this->_plugin::getSupportedSupplFileTypes())) $dispatcher->handle404();
+		if (!in_array($submissionFile->getData('mimetype'), $this->_plugin::getSupportedSupplFileTypes())) $dispatcher->handler404();
 
 		// Download file if exists
 		if (!Services::get('file')->fs->has($submissionFile->getData('path'))) {
@@ -63,6 +79,7 @@ class FullTextArticleHandler extends ArticleHandler {
 		}
 
 		$filename = Services::get('file')->formatFilename($submissionFile->getData('path'), $submissionFile->getLocalizedData('name'));
-		Services::get('file')->download($submissionFile->getData('path'), $filename);
+		Services::get('file')->download($submissionFile->getData('fileId'), $filename);
+
 	}
 }

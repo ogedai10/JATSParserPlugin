@@ -44,6 +44,13 @@ msgstr "Import full-text from galleys"
 msgid "plugins.generic.jatsParser.publication.jats.fulltext"
 msgstr "Full Text"
 
+msgid "plugins.generic.jatsParser.publication.jats.dates.label"
+msgstr "Retrieve dates from JATS XML?"
+
+msgid "plugins.generic.jatsParser.publication.jats.dates.description"
+msgstr "Dates will be retrieved from JATS XML and saved as a part of the publication. Old dates will be rewritten."
+
+
 msgid "plugins.generic.jatsParser.publication.jats.fulltext.success"
 msgstr "Full-text upload successful"
 
